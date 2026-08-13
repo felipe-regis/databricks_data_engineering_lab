@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Virtual environments
+.venv/
+venv/
+
+# Pytest
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Ruff / Mypy
+.ruff_cache/
+.mypy_cache/
+
+# VS Code
+.vscode/
+
+# Databricks
+.databricks/
+
+# Environment variables / secrets
+.env
+.env.*
+*.pem
+*.key
+
+# OS
+.DS_Store
+Thumbs.db
