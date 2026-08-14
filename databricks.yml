@@ -1,0 +1,21 @@
+bundle:
+  name: databricks_data_engineering_lab
+
+# Boas práticas: Nunca declare Jobs aqui. Aponte para a pasta resources.
+include:
+  - resources/*.yml
+
+# Definição dos ambientes (Deploy Targets)
+targets:
+  dev:
+    default: true
+    mode: development
+    # O modo development anexa automaticamente seu nome de usuário aos recursos 
+    # (ex: [dev felipe] Meu Job) para não conflitar com outros desenvolvedores.
+    workspace:
+      host: https://dbc-dca46044-58fe.cloud.databricks.com/
+  
+  prod:
+    mode: production
+    workspace:
+      host: https://dbc-dca46044-58fe.cloud.databricks.com/
