@@ -1,7 +1,7 @@
 resources:
   jobs:
     primeiro_pipeline_fde:
-      name: "[${bundle.environment}] Pipeline de Teste FDE"
+      name: "[${bundle.environment}] Lab 001 — Bronze ingestion"
       
       tasks:
         - task_key: validacao_inicial
@@ -9,3 +9,10 @@ resources:
           # O Databricks alocará o Serverless Compute dinamicamente.
           notebook_task:
             notebook_path: ../notebooks/01_ingestao.py
+            notebook_path: ../src/ingestion/bronze_ingestion.py
+            
+        # - task_key: bronze_ingestion
+        #   depends_on: 
+        #     - task_key: validacao_inicial
+        #   spark_python_task:
+        #     python_file: ../src/ingestion/bronze_ingestion.py
