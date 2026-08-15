@@ -37,6 +37,7 @@ resources:
               path: ../src/ingestion/bronze_transactions.sql
             parameters:
               table_name: "{{job.parameters.default_catalog}}.{{job.parameters.bronze_schema}}.transactions"
+              quarantine_table_name: "{{job.parameters.default_catalog}}.{{job.parameters.bronze_schema}}.transactions_quarantine"
               edl_datatype_raw: "{{job.parameters.edl_datatype_raw}}"
 
 
