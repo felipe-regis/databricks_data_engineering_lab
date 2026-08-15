@@ -26,7 +26,11 @@ def read_transactions(spark, source_path, schema):
     Returns:
         DataFrame containing the transactions data.
     """
-    return spark.read.csv(source_path, header=True, schema=schema)
+    ## FAILFAST para falhar rápido em caso de erro de leitura
+    # return spark.read.option("mode","FAILFAST").csv(source_path, header=True, schema=schema) 
+    
+    ## SEM FAILFAST para não falhar rápido em caso de erro de leitura (Pode ser útil para lidar com dados sujos, mas pode mascarar problemas de qualidade de dados)    
+    return spark.read.csv(source_path, header=True, schema=schema) 
 
 def add_ingestion_metadata(df):
     """
@@ -80,7 +84,7 @@ if __name__ == "__main__":
         spark.sql(f"TRUNCATE TABLE {table_path}")
 
         # Escrevendo os dados com metadados na tabela Delta
-        transactions_with_metadata_df.write.format("delta").mode("overwrite").saveAsTable(table_path)
+        transactions_with_metadata_df.write.format("delta").mode("overwrite").option("mergeSchema", "true").saveAsTable(table_path)
 
         # No lugar de print("Ingestão concluída com sucesso!"):
         logger.info("Ingestão concluída com sucesso!")
