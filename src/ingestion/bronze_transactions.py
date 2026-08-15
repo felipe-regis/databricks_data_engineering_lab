@@ -1,5 +1,6 @@
 # Databricks notebook source
 from venv import logger
+from databricks.sdk.runtime import dbutils
 
 from pyspark.sql.types import StructType, StructField, StringType, DoubleType, DateType
 from pyspark.sql import functions as F
@@ -28,7 +29,7 @@ def read_transactions(spark, source_path, schema):
     """
     ## FAILFAST para falhar rápido em caso de erro de leitura
     # return spark.read.option("mode","FAILFAST").csv(source_path, header=True, schema=schema) 
-    
+
     ## SEM FAILFAST para não falhar rápido em caso de erro de leitura (Pode ser útil para lidar com dados sujos, mas pode mascarar problemas de qualidade de dados)    
     return spark.read.csv(source_path, header=True, schema=schema) 
 
@@ -65,7 +66,7 @@ if __name__ == "__main__":
         schema = StructType([
             StructField("transaction_id", StringType(), True), 
             StructField("customer_id", StringType(), True),
-            StructField("amount", DoubleType(), True),
+            StructField("amount", DoubleType(), True), # Schema atualizado para DoubleType
             StructField("transaction_date", DateType(), True)
         ])
 
