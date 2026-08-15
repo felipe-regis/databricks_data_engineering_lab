@@ -1,0 +1,66 @@
+# ci-validation.yml
+# Esteira de Integração Contínua (CI) para projetos Databricks Asset Bundles (DABs).
+# Objetivo desta etapa: apenas VALIDAR o código e o bundle. Nenhum deploy é realizado aqui.
+name: CI - Validation
+
+# 1) Gatilho: executa quando um Pull Request é aberto ou atualizado (novos commits)
+#    e cujo destino (base) é a branch `dev`.
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches:
+      - dev
+
+# Boa prática: cancela execuções antigas do mesmo PR para economizar recursos.
+concurrency:
+  group: ci-validation-${{ github.ref }}
+  cancel-in-progress: true
+
+# Permissões mínimas necessárias (princípio do menor privilégio).
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Testes unitários e validação do bundle
+    runs-on: ubuntu-latest
+
+    # Variáveis de ambiente usadas pela Databricks CLI para autenticação.
+    # Configure os secrets no repositório: Settings > Secrets and variables > Actions.
+    env:
+      DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
+      DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+
+    steps:
+      # 2) Baixa o código do repositório para o runner do GitHub Actions.
+      - name: Checkout do repositório
+        uses: actions/checkout@v4
+
+      # 3) Prepara o ambiente Python na versão usada pelo projeto.
+      #    O cache do pip acelera execuções seguintes.
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      # 4a) Instala as dependências do projeto (runtime + desenvolvimento/testes).
+      - name: Instalar dependências
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          if [ -f requirements-dev.txt ]; then pip install -r requirements-dev.txt; fi
+          pip install pytest
+
+      # 4b) Executa os testes unitários. Se algum teste falhar, o PR é bloqueado.
+      - name: Executar testes unitários (pytest)
+        run: pytest -v
+
+      # 5) Instala a Databricks CLI oficial (v0.2xx+), necessária para os DABs.
+      - name: Instalar Databricks CLI
+        uses: databricks/setup-cli@main
+
+      # 6) Valida a integridade do bundle: sintaxe do databricks.yml,
+      #    resolução de variáveis, targets e recursos declarados.
+      - name: Validar Databricks Asset Bundle
+        run: databricks bundle validate --target dev
