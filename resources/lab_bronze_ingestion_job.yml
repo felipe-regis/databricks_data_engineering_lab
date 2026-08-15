@@ -1,0 +1,50 @@
+resources:
+  jobs:
+    bronze_ingestion_job:
+      name: "Lab 001 — Bronze ingestion"
+      description: >-
+        Ingests the raw transaction data from the source system into the Bronze
+        Delta table. This job is intended to be run daily, and it will only
+        ingest new data that has not been previously ingested.
+
+      # Envia um alerta se o pipeline falhar
+      email_notifications:
+        on_failure:
+          - ${var.notification_email}
+
+      parameters:
+        - name: default_catalog
+          default: ${var.default_catalog}
+        - name: bronze_schema
+          default: ${bundle.target}_${workspace.current_user.short_name}_${var.bronze_schema}
+        # - name: silver_schema
+        #   default: ${bundle.var.silver_schema}
+        # - name: gold_schema
+        #   default: ${bundle.var.gold_schema}
+        - name: environment
+          default: ${var.environment}
+      
+      tasks:
+        - task_key: validacao_inicial
+          # Sem a necessidade de definir job_clusters ou job_cluster_key!
+          # O Databricks alocará o Serverless Compute dinamicamente.
+          notebook_task:
+            notebook_path: ../notebooks/01_ingestao.py
+            # notebook_path: ../src/ingestion/bronze_transactions.py
+            
+        - task_key: bronze_ingestion
+          # Sem a necessidade de definir job_clusters ou job_cluster_key!
+          # O Databricks alocará o Serverless Compute dinamicamente.
+          depends_on: 
+            - task_key: validacao_inicial
+          notebook_task:
+            notebook_path: ../src/ingestion/bronze_transactions.py
+            base_parameters:
+              default_catalog: "{{job.parameters.default_catalog}}"
+              bronze_schema: "{{job.parameters.bronze_schema}}"
+              environment: "{{job.parameters.environment}}"
+          
+          # Você também pode colocar notificações por tarefa específica!
+          email_notifications:
+            on_failure:
+              - ${var.notification_email}

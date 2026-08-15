@@ -1,0 +1,85 @@
+resources:
+  jobs:
+    lab_setup_job:
+      name: "Lab 001 — Environment setup"
+      description: >-
+        One-time environment setup job. Runs the DDL SQL scripts in
+        src/ingestion, src/transformation and src/aggregation to create the
+        Unity Catalog schemas and Delta tables required by the daily
+        transformation and reporting batch jobs.
+
+      tags:
+        environment: ${bundle.target}
+        purpose: environment-setup
+
+      parameters:
+        - name: default_catalog
+          default: ${var.default_catalog}
+        - name: bronze_schema
+          default: ${bundle.target}_${workspace.current_user.short_name}_${var.bronze_schema}
+        # - name: silver_schema
+        #   default: ${bundle.var.silver_schema}
+        # - name: gold_schema
+        #   default: ${bundle.var.gold_schema}
+        - name: edl_datatype_raw
+          default: ${var.edl_datatype_raw}
+
+      queue:
+        enabled: true
+
+      max_concurrent_runs: 1
+
+      tasks:
+        - task_key: ddl_bronze_transaction
+          sql_task:
+            warehouse_id: ${var.warehouse_id}
+            file: 
+              path: ../src/ingestion/bronze_transactions.sql
+            parameters:
+              table_name: "{{job.parameters.default_catalog}}.{{job.parameters.bronze_schema}}.transactions"
+              edl_datatype_raw: "{{job.parameters.edl_datatype_raw}}"
+
+
+      # tasks:
+      #   # ---------------- Ingestion (Bronze) ----------------
+      #   - task_key: ddl_bronze_transaction
+      #     sql_task:
+      #       warehouse_id: ${var.warehouse_id}
+      #       file:
+      #         path: ../src/ingestion/bronze_transactions.sql
+      #       parameters:
+      #         default_catalog: "{{job.parameters.default_catalog}}"
+      #         schema: "{{job.parameters.bronze_schema}}"
+      #         edl_datatype_raw: "{{job.parameters.edl_datatype_raw}}"
+
+      #   # ---------------- Transformation (Silver) ----------------
+      #   # Add one sql_task per DDL script placed in src/transformation
+      #   # - task_key: ddl_silver_transaction
+      #   #   depends_on:
+      #   #     - task_key: ddl_bronze_transaction
+      #   #   sql_task:
+      #   #     warehouse_id: ${bundle.var.warehouse_id}
+      #   #     file:
+      #   #       path: ../src/transformation/silver_transaction.sql  -- exemplo de script de transformação para criar a tabela Silver
+      #   #     parameters:
+      #   #       default_catalog: "{{job.parameters.default_catalog}}"
+      #   #       schema: "{{job.parameters.silver_schema}}"
+
+      #   # ---------------- Reporting (Gold) ----------------
+      #   # Add one sql_task per DDL script placed in src/reporting
+      #   # - task_key: ddl_gold_transaction_summary
+      #   #   depends_on:
+      #   #     - task_key: ddl_silver_transaction
+      #   #   sql_task:
+      #   #     warehouse_id: ${bundle.var.warehouse_id}
+      #   #     file:
+      #   #       path: ../src/aggregation/gold_transaction_summary.sql  -- exemplo de script de agregação para criar a tabela Gold
+      #   #     parameters:
+      #   #       default_catalog: "{{job.parameters.default_catalog}}"
+      #   #       schema: "{{job.parameters.gold_schema}}"
+
+      # # Setup job is triggered manually / once per deployment - no schedule.
+
+      # email_notifications:
+      #   on_failure:
+      #     - ${var.notification_email}

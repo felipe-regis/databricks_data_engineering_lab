@@ -1,0 +1,8 @@
+resources:
+  schemas:
+    bronze:
+      name: ${var.bronze_schema}
+      catalog_name: ${var.default_catalog}
+      comment: >
+        Personal Bronze schema managed by the mini-lab-dab bundle.
+        Used for development and hands-on Databricks Data Engineering labs.
