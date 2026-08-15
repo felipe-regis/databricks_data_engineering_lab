@@ -1,4 +1,4 @@
-transaction_id,customer_id,amount,transaction_date,pais
+transaction_id,customer_id,amount,transaction_date,country
 1001,C001,120.50,2026-08-01,BR
 1002,C002,89.90,2026-08-01,BR
 1003,C001,42.00,2026-08-02,US
