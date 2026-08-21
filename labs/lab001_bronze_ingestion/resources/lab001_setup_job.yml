@@ -1,6 +1,6 @@
 resources:
   jobs:
-    lab_setup_job:
+    lab001_setup_job:
       name: "Lab 001 — Environment setup"
       description: >-
         One-time environment setup job. Runs the DDL SQL scripts in
@@ -13,8 +13,8 @@ resources:
         purpose: environment-setup
 
       parameters:
-        - name: default_catalog
-          default: ${var.default_catalog}
+        - name: catalog_name
+          default: ${var.catalog_name}
         - name: bronze_schema
           default: ${bundle.target}_${workspace.current_user.short_name}_${var.bronze_schema}
         # - name: silver_schema
@@ -36,8 +36,8 @@ resources:
             file: 
               path: ../src/ingestion/bronze_transactions.sql
             parameters:
-              table_name: "{{job.parameters.default_catalog}}.{{job.parameters.bronze_schema}}.transactions"
-              quarantine_table_name: "{{job.parameters.default_catalog}}.{{job.parameters.bronze_schema}}.transactions_quarantine"
+              table_name: "{{job.parameters.catalog_name}}.{{job.parameters.bronze_schema}}.transactions"
+              quarantine_table_name: "{{job.parameters.catalog_name}}.{{job.parameters.bronze_schema}}.transactions_quarantine"
               edl_datatype_raw: "{{job.parameters.edl_datatype_raw}}"
 
 
@@ -49,7 +49,7 @@ resources:
       #       file:
       #         path: ../src/ingestion/bronze_transactions.sql
       #       parameters:
-      #         default_catalog: "{{job.parameters.default_catalog}}"
+      #         catalog_name: "{{job.parameters.catalog_name}}"
       #         schema: "{{job.parameters.bronze_schema}}"
       #         edl_datatype_raw: "{{job.parameters.edl_datatype_raw}}"
 
@@ -63,7 +63,7 @@ resources:
       #   #     file:
       #   #       path: ../src/transformation/silver_transaction.sql  -- exemplo de script de transformação para criar a tabela Silver
       #   #     parameters:
-      #   #       default_catalog: "{{job.parameters.default_catalog}}"
+      #   #       catalog_name: "{{job.parameters.catalog_name}}"
       #   #       schema: "{{job.parameters.silver_schema}}"
 
       #   # ---------------- Reporting (Gold) ----------------
@@ -76,7 +76,7 @@ resources:
       #   #     file:
       #   #       path: ../src/aggregation/gold_transaction_summary.sql  -- exemplo de script de agregação para criar a tabela Gold
       #   #     parameters:
-      #   #       default_catalog: "{{job.parameters.default_catalog}}"
+      #   #       catalog_name: "{{job.parameters.catalog_name}}"
       #   #       schema: "{{job.parameters.gold_schema}}"
 
       # # Setup job is triggered manually / once per deployment - no schedule.

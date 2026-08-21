@@ -2,7 +2,7 @@
 import pytest 
 from datetime import date
 from pyspark.sql.types import StructType, StructField, StringType, DoubleType, DateType
-from ingestion.bronze_transactions import add_ingestion_metadata, separate_quarantine
+from labs.lab001_bronze_ingestion.src.ingestion.bronze_transactions import add_ingestion_metadata, separate_quarantine
 
 def test_add_ingestion_metadata_adds_columns(spark, tmp_path):
     # 1. PREPARAÇÃO: Criar um arquivo CSV temporário real na sua máquina local

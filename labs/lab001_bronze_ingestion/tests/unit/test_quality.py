@@ -1,4 +1,4 @@
-from data_pipeline.quality import is_valid_customer_id
+from labs.lab001_bronze_ingestion.src.data_pipeline.quality import is_valid_customer_id
 import pytest
 
 def test_valid_customer_id():
