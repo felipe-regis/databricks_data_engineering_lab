@@ -9,24 +9,31 @@
 
 
 bundle:
-  name: mini-lab-dab
+  name: databricks_data_engineering_bootcamp
 
 # experimental:
 #   skip_name_prefix_for_schema: true # remove o prefixo do nome do schema "dev_feregis03_" para que o schema seja apenas bronze. Útil para evitar conflitos de nomes de schemas entre desenvolvedores.
 
 # Boas práticas: Nunca declare Jobs aqui. Aponte para a pasta resources.
 include:
-  - resources/*.yml
+  - labs/*/resources/*.yml
 
 variables:
-  environment:
-    description: Environment name (dev, prod, etc.)
-    default: ${bundle.target}
-  default_catalog: 
-    default: lakeflow_mini_lab
+  lab_name:
+    description: Bronze Ingestion
+    default: lab001
+  catalog_name:
+    description: Unity Catalog name for the Databricks workspace
+    default: workspace
   bronze_schema:
-    description: Unity Catalog schema name for Bronze tables
-    default: bronze
+    description: Unity Catalog schema name for Bronze tables  
+    default: ${workspace.current_user.short_name}_${var.lab_name}
+  environment:
+    description: Environment name (dev, prod, etc.), not the deployment context. Used for EDL datatypes and other environment-specific configurations.
+    default: dev
+  # bronze_schema:
+  #   description: Unity Catalog schema name for Bronze tables
+  #   default: bronze
   # silver_schema:
   #   description: Unity Catalog schema name for Silver tables
   #   default: silver
@@ -72,32 +79,50 @@ targets:
     # (ex: [dev feregis03] Meu Job) para não conflitar com outros desenvolvedores.
     workspace:
       host: https://dbc-dca46044-58fe.cloud.databricks.com/
-      # root_path: ~/Lakeflow Mini Lab - DEVL/lab001/${bundle.name}/${bundle.target}
     variables:
       environment: dev
-      default_catalog: lakeflow_mini_lab
+      catalog_name: workspace
       # source_system_env: dev # Environment name for the source system (used in the source_system_env variable)
       # source_system_schema: dev # Unity Catalog schema name for the source system (used in the source_system_schema variable)
       bronze_schema: bronze
       # silver_schema: ${workspace.current_user.short_name}_silver
       # gold_schema: ${workspace.current_user.short_name}_gold
-      edl_datatype_raw: com.feregis03.enterprise.datalake.raw.databricks-data-engineering-lab-lab001_raw_dev # variável para o tipo de dados do EDL (Enterprise Data Lake) para a camada Raw/Landing/Ingestion
+      edl_datatype_raw: com.feregis03.enterprise.datalake.raw.databricks-data-engineering-lab-lab001_raw_${var.environment} # variável para o tipo de dados do EDL (Enterprise Data Lake) para a camada Raw/Landing/Ingestion
       # edl_datatype_enhanced: com.feregis03.enterprise.datalake.enhanced.databricks-data-engineering-lab-lab001_enhanced_dev # variável para o tipo de dados do EDL (Enterprise Data Lake) para a camada Enhanced/Enriched/Transformation/Cleansed/Conformed/Foundational
       # edl_datatype_model: com.feregis03.enterprise.datalake.model.databricks-data-engineering-lab-lab001_model_dev # variável para o tipo de dados do EDL (Enterprise Data Lake) para a camada Gold/Model/Curated/Reporting/Analytics/Presentation/Consumption/Datamart
       # dlt_min_workers: "1"
       # dlt_max_workers: "5"      
       # dlt_development: true
   
-  prod:
-    mode: production
-    workspace:
-      host: https://dbc-dca46044-58fe.cloud.databricks.com/
-      root_path: /Workspace/Lakeflow Mini Lab - PROD/lab001/${bundle.name}/${bundle.target}
-    variables:
-      default_catalog: lakeflow_mini_lab
-      # edl_datatype_raw: com.feregis03.enterprise.datalake.raw.databricks-data-engineering-lab-lab001_raw_prod # variável para o tipo de dados do EDL (Enterprise Data Lake) para a camada Bronze/Raw/Landing/Ingestion
-      # edl_datatype_enhanced: com.feregis03.enterprise.datalake.enhanced.databricks-data-engineering-lab-lab001_enhanced_prod # variável para o tipo de dados do EDL (Enterprise Data Lake) para a camada Silver/Enhanced/Enriched/Transformation/Cleansed/Conformed/Foundational
-      # edl_datatype_model: com.feregis03.enterprise.datalake.model.databricks-data-engineering-lab-lab001_model_prod # variável para o tipo de dados do EDL (Enterprise Data Lake) para a camada Gold/Model/Curated/Reporting/Analytics/Presentation/Consumption/Datamart
-      # dlt_min_workers: "1"
-      # dlt_max_workers: "5"      
-      # dlt_development: false
+  # ci_dev:
+  #   mode: production
+  #   workspace:
+  #     host: https://dbc-dca46044-58fe.cloud.databricks.com/
+  #     root_path: /Workspace/Shared/Databricks Mini Labs/.bundle/${bundle.name}/${bundle.target}
+  #   variables:
+  #     environment: dev
+  #     catalog_name: dev_labs
+  #     bronze_schema: ${var.lab_name}_bronze
+  #     edl_datatype_raw: com.feregis03.enterprise.datalake.raw.databricks-data-engineering-lab-lab001_raw_${var.environment} # variável para o tipo de dados do EDL (Enterprise Data Lake) para a camada Raw/Landing/Ingestion
+  #     # edl_datatype_enhanced: com.feregis03.enterprise.datalake.enhanced.databricks-data-engineering-lab-lab001_enhanced_dev # variável para o tipo de dados do EDL (Enterprise Data Lake) para a camada Enhanced/Enriched/Transformation/Cleansed/Conformed/Foundational
+  #     # edl_datatype_model: com.feregis03.enterprise.datalake.model.databricks-data-engineering-lab-lab001_model_dev # variável para o tipo de dados do EDL (Enterprise Data Lake) para a camada Gold/Model/Curated/Reporting/Analytics/Presentation/Consumption/Datamart
+  #     # dlt_min_workers: "1"
+  #     # dlt_max_workers: "5"      
+  #     # dlt_development: true
+  
+  # qual:
+  #   mode: production
+  #   workspace:
+  #     host: https://dbc-dca46044-58fe.cloud.databricks.com/
+  #     root_path: /Workspace/Shared/Databricks Mini Labs/.bundle/${bundle.name}/${bundle.target}
+  #   variables:
+  #     environment: qual
+  #     catalog_name: labs
+  #     bronze_schema: ${var.lab_name}_bronze
+  #     edl_datatype_raw: com.feregis03.enterprise.datalake.raw.databricks-data-engineering-lab-lab001_raw_${var.environment} # variável para o tipo de dados do EDL (Enterprise Data Lake) para a camada Raw/Landing/Ingestion
+  #     # edl_datatype_raw: com.feregis03.enterprise.datalake.raw.databricks-data-engineering-lab-lab001_raw_prod # variável para o tipo de dados do EDL (Enterprise Data Lake) para a camada Bronze/Raw/Landing/Ingestion
+  #     # edl_datatype_enhanced: com.feregis03.enterprise.datalake.enhanced.databricks-data-engineering-lab-lab001_enhanced_prod # variável para o tipo de dados do EDL (Enterprise Data Lake) para a camada Silver/Enhanced/Enriched/Transformation/Cleansed/Conformed/Foundational
+  #     # edl_datatype_model: com.feregis03.enterprise.datalake.model.databricks-data-engineering-lab-lab001_model_prod # variável para o tipo de dados do EDL (Enterprise Data Lake) para a camada Gold/Model/Curated/Reporting/Analytics/Presentation/Consumption/Datamart
+  #     # dlt_min_workers: "1"
+  #     # dlt_max_workers: "5"      
+  #     # dlt_development: false

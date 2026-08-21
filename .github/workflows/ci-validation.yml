@@ -1,66 +1,94 @@
-# ci-validation.yml
-# Esteira de Integração Contínua (CI) para projetos Databricks Asset Bundles (DABs).
-# Objetivo desta etapa: apenas VALIDAR o código e o bundle. Nenhum deploy é realizado aqui.
-name: CI - Validation
+# # ci-validation.yml
+# # Esteira de Integração Contínua (CI) para projetos Databricks Asset Bundles (DABs).
+# # Objetivo desta etapa: apenas VALIDAR o código e o bundle. Nenhum deploy é realizado aqui.
+# name: CI - Validation
 
-# 1) Gatilho: executa quando um Pull Request é aberto ou atualizado (novos commits)
-#    e cujo destino (base) é a branch `dev`.
-on:
-  pull_request:
-    types: [opened, synchronize, reopened]
-    branches:
-      - dev
+# # 1) Gatilho: executa quando um Pull Request é aberto ou atualizado (novos commits)
+# #    e cujo destino (base) é a branch `dev`.
+# on:
+#   pull_request:
+#     types: [opened, synchronize, reopened]
+#     branches:
+#       - dev
+#   push:
+#     branches:
+#       - dev
 
-# Boa prática: cancela execuções antigas do mesmo PR para economizar recursos.
-concurrency:
-  group: ci-validation-${{ github.ref }}
-  cancel-in-progress: true
+# env:
+#   # Variáveis de ambiente usadas pela Databricks CLI para autenticação.
+#   # Configure os secrets no repositório: Settings > Secrets and variables > Actions.
+#   DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
+#   DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
 
-# Permissões mínimas necessárias (princípio do menor privilégio).
-permissions:
-  contents: read
+# # Boa prática: cancela execuções antigas do mesmo PR para economizar recursos.
+# concurrency:
+#   group: ci-validation-${{ github.ref }}
+#   cancel-in-progress: true
 
-jobs:
-  validate:
-    name: Testes unitários e validação do bundle
-    runs-on: ubuntu-latest
+# # Permissões mínimas necessárias (princípio do menor privilégio).
+# permissions:
+#   contents: read
 
-    # Variáveis de ambiente usadas pela Databricks CLI para autenticação.
-    # Configure os secrets no repositório: Settings > Secrets and variables > Actions.
-    env:
-      DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
-      DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+# jobs:
+#   # FASE 1: CI (Continuous Integration) - Roda apenas no Pull Request
+#   ci_validation:
+#     name: Testes unitários e validação do bundle
+#     runs-on: ubuntu-latest
 
-    steps:
-      # 2) Baixa o código do repositório para o runner do GitHub Actions.
-      - name: Checkout do repositório
-        uses: actions/checkout@v4
+#     # Variáveis de ambiente usadas pela Databricks CLI para autenticação.
+#     # Configure os secrets no repositório: Settings > Secrets and variables > Actions.
+#     env:
+#       DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
+#       DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
 
-      # 3) Prepara o ambiente Python na versão usada pelo projeto.
-      #    O cache do pip acelera execuções seguintes.
-      - name: Configurar Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-          cache: 'pip'
+#     steps:
+#       # 2) Baixa o código do repositório para o runner do GitHub Actions.
+#       - name: Checkout do repositório
+#         uses: actions/checkout@v4
 
-      # 4a) Instala as dependências do projeto (runtime + desenvolvimento/testes).
-      - name: Instalar dependências
-        run: |
-          python -m pip install --upgrade pip
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-          if [ -f requirements-dev.txt ]; then pip install -r requirements-dev.txt; fi
-          pip install pytest
+#       # 3) Prepara o ambiente Python na versão usada pelo projeto.
+#       #    O cache do pip acelera execuções seguintes.
+#       - name: Configurar Python
+#         uses: actions/setup-python@v5
+#         with:
+#           python-version: '3.11'
+#           cache: 'pip'
 
-      # 4b) Executa os testes unitários. Se algum teste falhar, o PR é bloqueado.
-      - name: Executar testes unitários (pytest)
-        run: pytest -v
+#       # 4a) Instala as dependências do projeto (runtime + desenvolvimento/testes).
+#       - name: Instalar dependências
+#         run: |
+#           python -m pip install --upgrade pip
+#           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+#           if [ -f requirements-dev.txt ]; then pip install -r requirements-dev.txt; fi
+#           pip install pytest
 
-      # 5) Instala a Databricks CLI oficial (v0.2xx+), necessária para os DABs.
-      - name: Instalar Databricks CLI
-        uses: databricks/setup-cli@main
+#       # 4b) Executa os testes unitários. Se algum teste falhar, o PR é bloqueado.
+#       - name: Executar testes unitários (pytest)
+#         run: pytest -v
 
-      # 6) Valida a integridade do bundle: sintaxe do databricks.yml,
-      #    resolução de variáveis, targets e recursos declarados.
-      - name: Validar Databricks Asset Bundle
-        run: databricks bundle validate --target dev
+#       # 5) Instala a Databricks CLI oficial (v0.2xx+), necessária para os DABs.
+#       - name: Instalar Databricks CLI
+#         uses: databricks/setup-cli@main
+
+#       # 6) Valida a integridade do bundle: sintaxe do databricks.yml,
+#       #    resolução de variáveis, targets e recursos declarados.
+#       - name: Validar Databricks Asset Bundle
+#         run: databricks bundle validate --target ci_dev
+
+
+#   # FASE 2: CD (Continuous Deployment) - Roda após o Merge na dev
+#   cd_deployment:
+#     name: "Deploy no Ambiente de QA"
+#     runs-on: ubuntu-latest
+#     needs: ci_validation # Só faz o deploy se a validação (CI) passar
+#     if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
+#     steps:
+#       - name: Checkout do código
+#         uses: actions/checkout@v3
+
+#       - name: Instalar Databricks CLI
+#         uses: databricks/setup-cli@main
+
+#       - name: Fazer o Deploy para o Target de QA
+#         # Aqui o robô usa o target 'qa' configurado no seu databricks.yml
+#         run: databricks bundle deploy -t qa

@@ -13,8 +13,8 @@ resources:
           - ${var.notification_email}
 
       parameters:
-        - name: default_catalog
-          default: ${var.default_catalog}
+        - name: catalog_name
+          default: ${var.catalog_name}
         - name: bronze_schema
           default: ${bundle.target}_${workspace.current_user.short_name}_${var.bronze_schema}
         # - name: silver_schema
@@ -40,7 +40,7 @@ resources:
           notebook_task:
             notebook_path: ../src/ingestion/bronze_transactions.py
             base_parameters:
-              default_catalog: "{{job.parameters.default_catalog}}"
+              catalog_name: "{{job.parameters.catalog_name}}"
               bronze_schema: "{{job.parameters.bronze_schema}}"
               environment: "{{job.parameters.environment}}"
           

@@ -68,11 +68,11 @@ if __name__ == "__main__":
         # Aqui é onde o Spark REAL é instanciado quando o pipeline roda na nuvem ou localmente
         spark = SparkSession.builder.appName("BronzeIngestion").getOrCreate()
 
-        dbutils.widgets.text("default_catalog", "workspace", "Catalog")
+        dbutils.widgets.text("catalog_name", "workspace", "Catalog")
         dbutils.widgets.text("bronze_schema", "default", "Bronze Schema")
         dbutils.widgets.text("environment", "dev", "Environment")
 
-        default_catalog = dbutils.widgets.get("default_catalog")
+        catalog_name = dbutils.widgets.get("catalog_name")
         bronze_schema = dbutils.widgets.get("bronze_schema")
         environment = dbutils.widgets.get("environment")
 
@@ -84,7 +84,7 @@ if __name__ == "__main__":
             StructField("transaction_date", DateType(), True) # Schema reforçado e atualizado para DateType em contrato com a tabela Delta
         ])
 
-        source_path = f"/Volumes/{default_catalog}/{bronze_schema}/landing/"
+        source_path = f"/Volumes/{catalog_name}/{bronze_schema}/landing/"
         csv_file_path = source_path + "transactions.csv"
 
         # Lendo o arquivo físico real
@@ -98,7 +98,7 @@ if __name__ == "__main__":
 
         # Criando a tabela Delta se ela não existir e limpando-a antes de escrever os novos dados
         table_name = "transactions"
-        table_path = f"{default_catalog}.{bronze_schema}.{table_name}"
+        table_path = f"{catalog_name}.{bronze_schema}.{table_name}"
         spark.sql(f"TRUNCATE TABLE {table_path}") # Limpa a tabela antes de escrever os novos dados 
 
         # Escrevendo os dados com metadados na tabela Delta
@@ -111,7 +111,7 @@ if __name__ == "__main__":
         logger.info(f"Dados válidos gravados com sucesso na tabela {table_path}.")
 
         quarantine_table_name = "transactions_quarantine"
-        quarantine_table_path = f"{default_catalog}.{bronze_schema}.{quarantine_table_name}"
+        quarantine_table_path = f"{catalog_name}.{bronze_schema}.{quarantine_table_name}"
 
         # Escrevendo os dados com metadados na tabela Delta
         (quarantine_df.write
